@@ -1,5 +1,6 @@
 import torch
 from torch.utils.data import Dataset,DataLoader
+from datasets_files.input_data import get_real_data
 
 #This line checks if you have a GPU else safely falls back to CPU
 
@@ -22,15 +23,9 @@ class ReviewDataset(Dataset):
 
         return single_review,single_label
     
-mock_reviews = [
-    "This movie was absolutely amazing!",
-    "I hated this product, it broke instantly.",
-    "Decent quality, but shipping took too long.",
-    "Best purchase I have made all year."
-]
-mock_labels = [1, 0, 0, 1]
+real_reviews,real_labels = get_real_data()
 
-dataset = ReviewDataset(mock_reviews,mock_labels)
+dataset = ReviewDataset(real_reviews,real_labels)
 dataLoader = DataLoader(dataset,batch_size = 2,shuffle = True)
 
 print("\n--- Testing Conveyor Belt (DataLoader) Batches ---")

@@ -1,3 +1,4 @@
 datasets 
 pandas 
 matplotlib
+torch

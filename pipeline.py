@@ -28,8 +28,8 @@ real_reviews,real_labels = get_real_data()
 dataset = ReviewDataset(real_reviews,real_labels)
 dataLoader = DataLoader(dataset,batch_size = 2,shuffle = True)
 
-print("\n--- Testing Conveyor Belt (DataLoader) Batches ---")
-for batch_idx, (batch_reviews, batch_labels) in enumerate(dataLoader):
-    print(f"Box {batch_idx + 1} coming down the belt:")
-    print(f"  Processed Reviews: {batch_reviews}")
-    print(f"  Processed Labels:  {batch_labels}")
+# print("\n--- Testing Conveyor Belt (DataLoader) Batches ---")
+# for batch_idx, (batch_reviews, batch_labels) in enumerate(dataLoader):
+#     print(f"Box {batch_idx + 1} coming down the belt:")
+#     print(f"  Processed Reviews: {batch_reviews}")
+#     print(f"  Processed Labels:  {batch_labels}")

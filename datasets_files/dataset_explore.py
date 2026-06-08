@@ -78,8 +78,6 @@ def load_vocab(vocab_path=None):
     if not Path(path).exists():
         raise FileNotFoundError(
             f"\n  vocab.json not found at: {path}\n"
-            f"  Fix: run `python week1_data_loading.py` once to generate it.\n"
-            f"  This only needs to be done once."
         )
 
     with open(path, "r", encoding="utf-8") as f:
@@ -280,28 +278,3 @@ if __name__ == "__main__":
     print(f"\n  [REAL DATA] {len(real_reviews):,} reviews loaded from train split")
     print(f"  First : {real_reviews[0][:80]!r} → label={real_labels[0]}")
     print(f"  ✅ Both return list[str], list[int] — identical interface")
-
-    print("\n" + "=" * 60)
-    print("WEEK 1 COMPLETE — SUMMARY")
-    print("=" * 60)
-    print(f"  ✅  Dataset loaded    : {len(dataset['train']):,} train + {len(dataset['test']):,} test")
-    print(f"  ✅  Explored          : balance, lengths, noise")
-    print(f"  ✅  Cleaning pipeline : lowercase→HTML→URL→punct→whitespace→tokenize→stopwords")
-    print(f"  ✅  Vocabulary built  : {len(word_to_idx):,} words  (MIN_FREQ={MIN_FREQ})")
-    print(f"  ✅  Encode/decode     : round-trip verified")
-    print(f"  ✅  Vocab saved       : {VOCAB_PATH}")
-    print(f"  ✅  Data interface    : get_mock_data() and get_real_data() ready")
-    print()
-    print("  YOUR FRIEND IMPORTS LIKE THIS:")
-    print("    from week1_data_loading import get_mock_data, get_real_data")
-    print("    from week1_data_loading import clean_and_tokenize, encode")
-    print("    from week1_data_loading import load_vocab")
-    print()
-    print("    word_to_idx, idx_to_word = load_vocab()")
-    print("    reviews, labels = get_mock_data()   # test first")
-    print("    reviews, labels = get_real_data('train')  # then swap in")
-    print()
-    print("  NEXT (Week 2):")
-    print("  - Padding and truncation (MAX_LEN sequences)")
-    print("  - Train / validation / test split (80/10/10)")
-    print("=" * 60)

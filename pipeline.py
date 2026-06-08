@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import Dataset,DataLoader
-from datasets_files.input_data import get_real_data
+from datasets_files.dataset_explore import get_real_data
 
 #This line checks if you have a GPU else safely falls back to CPU
 

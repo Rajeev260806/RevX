@@ -7,7 +7,7 @@
     "pad_index": 0,
     "unk_index": 1
   },
-  "wordtoidx": {
+  "word_to_idx": {
     "<PAD>": 0,
     "<UNK>": 1,
     "movie": 2,

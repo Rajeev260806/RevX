@@ -3,7 +3,7 @@ import random
 from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).parent))
-from datasets_files.dataset_explore import(clean_and_tokenize,encode,load_vocab,get_mock_data,get_real_data,PAD_TOKEN,UNK_TOKEN,)
+from dataset_explore import(clean_and_tokenize,encode,load_vocab,get_mock_data,get_real_data,PAD_TOKEN,UNK_TOKEN,)
 
 MAX_LEN     = 512
 RANDOM_SEED = 42

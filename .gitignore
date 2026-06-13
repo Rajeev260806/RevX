@@ -1,5 +1,5 @@
 .venv/
 venv/
 All_Beauty.jsonl
-datasets_files/__pycache__
+dataset_helpers/__pycache__
 __pycache__

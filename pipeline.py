@@ -1,8 +1,8 @@
 import torch
 from torch.utils.data import Dataset,DataLoader
-from datasets_files.dataset_explore import get_real_data
+from dataset_helpers.dataset_explore import get_real_data
 import torch.nn as nn
-from data_tokenize import get_splits
+from dataset_helpers.data_tokenize import get_splits
 
 #This line checks if you have a GPU else safely falls back to CPU
 device = torch.device("cuda" if torch.cuda.is_available() else"cpu")

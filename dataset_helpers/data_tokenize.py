@@ -57,7 +57,7 @@ def get_splits(mock_data=False):
         train_r, train_l, val_r, val_l = split_data(
             all_reviews, all_labels, val_ratio=VAL_RATIO, seed=RANDOM_SEED
         )
-        test_r,val_l = get_real_data("test")
+        test_r,test_l = get_real_data("test")
 
     train_encodings = [tokenize_and_encode(r, word_to_idx, MAX_LEN) for r in train_r]
     val_encodings   = [tokenize_and_encode(r, word_to_idx, MAX_LEN) for r in val_r]

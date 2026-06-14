@@ -5,9 +5,9 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent))
 from dataset_explore import(clean_and_tokenize,encode,load_vocab,get_mock_data,get_real_data,PAD_TOKEN,UNK_TOKEN,)
 
-MAX_LEN     = 512
+MAX_LEN = 512
 RANDOM_SEED = 42
-VAL_RATIO   = 0.1  #10% of training set = 2500 reviews
+VAL_RATIO = 0.1  #10% of training set = 2500 reviews
 
 def pad_or_truncate(indices,MAX_LEN,pad_index=0):
     if len(indices)<=MAX_LEN:
@@ -57,7 +57,7 @@ def get_splits(mock_data=False):
         train_r, train_l, val_r, val_l = split_data(
             all_reviews, all_labels, val_ratio=VAL_RATIO, seed=RANDOM_SEED
         )
-        test_r,val_l = get_real_data("test")
+        test_r,test_l = get_real_data("test")
 
     train_encodings = [tokenize_and_encode(r, word_to_idx, MAX_LEN) for r in train_r]
     val_encodings   = [tokenize_and_encode(r, word_to_idx, MAX_LEN) for r in val_r]

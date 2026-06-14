@@ -36,7 +36,7 @@ def build_dataloader(mock=False,batch_size=BATCH_SIZE):
         Y = torch.tensor(labels,dtype=torch.long)
         return X,Y
     
-    tr_X,tr_Y = to_tensors(tr_txt,tr_lb)       #python to tensor
+    tr_X,tr_Y = to_tensors(tr_txt,tr_lb)       
     val_X,val_Y = to_tensors(val_txt,val_lb)
     te_X,te_Y = to_tensors(te_txt,te_lb)
 

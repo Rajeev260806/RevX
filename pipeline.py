@@ -23,18 +23,20 @@ class ReviewDataset(Dataset):
 # 3. Data Pipelines
 train_x, train_y, val_x, val_y, test_x, test_y = get_splits(mock_data=False)
 
-train_dataset = ReviewDataset(train_x, train_y)
-val_dataset = ReviewDataset(val_x, val_y)
-
+# Slice BEFORE building datasets so DataLoaders use the intended subset.
+# Previously the slice happened after dataset creation and had no effect.
 train_x, train_y = train_x[:500], train_y[:500]
-val_x, val_y = val_x[:100], val_y[:100]
+val_x,   val_y   = val_x[:100],   val_y[:100]
+
+train_dataset = ReviewDataset(train_x, train_y)
+val_dataset   = ReviewDataset(val_x, val_y)
 
 train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
 
-load_vocab_func = get_splits.__globals__['load_vocab']
-word_to_idx, _ = load_vocab_func()
-VOCAB_SIZE = len(word_to_idx)  
+from dataset_helpers.dataset_explore import load_vocab
+word_to_idx, _ = load_vocab()
+VOCAB_SIZE = len(word_to_idx)
 
 # =============================================================
 #         WEEK 4: HYPERPARAMETER TUNING ENGINE
@@ -123,25 +125,21 @@ print("Saved top-tier model weights to 'best_lstm_model.pth'")
 # INFERENCE PIPELINE FOR CUSTOM REVIEWS
 
 def predict_sentiment(text, model, word_idx_map, max_len=512):
+    """
+    Uses the same tokenize_and_encode pipeline as training.
+    Previously used a different cleaning function — inputs must be
+    preprocessed identically at inference and training time.
+    """
+    from dataset_helpers.data_tokenize import tokenize_and_encode
     model.eval()
-    clean_text = text.lower()
-    for char in [".", ",", "!", "?", '"', "'", "(", ")", "-", ";", ":"]:
-        clean_text = clean_text.replace(char, "")
-        
-    words = clean_text.split()
-    tokens = [word_idx_map.get(word, 0) for word in words]
-    
-    if len(tokens) < max_len:
-        tokens = tokens + [0] * (max_len - len(tokens))
-    else:
-        tokens = tokens[:max_len]
-        
+
+    tokens = tokenize_and_encode(text, word_idx_map, max_len)
     input_tensor = torch.tensor([tokens], dtype=torch.long).to(device)
-    
+
     with torch.no_grad():
         raw_prediction = model(input_tensor)
         probability = torch.sigmoid(raw_prediction).item()
-        
+
     if probability >= 0.5:
         return "Positive", probability * 100
     else:

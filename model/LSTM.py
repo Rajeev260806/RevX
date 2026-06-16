@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 class LSTMClassifier(nn.Module):
-    def __init__(self, vocab_size, embedding_dim=128, hidden_dim=128, output_dim=1, dropout_rate=0.3):
+    def __init__(self, vocab_size, embedding_dim=128, hidden_dim=128, output_dim=2, dropout_rate=0.3):
         super(LSTMClassifier, self).__init__()
         
         self.embedding = nn.Embedding(num_embeddings=vocab_size, embedding_dim=embedding_dim)
@@ -13,7 +13,7 @@ class LSTMClassifier(nn.Module):
         #Overfitting Safety Net (Dropout Layer)
         self.dropout = nn.Dropout(p=dropout_rate)
         
-        #The Final Decider (Linear Layer)
+        # Output 2 logits (NEG score, POS score) — matches FFC and CrossEntropyLoss
         self.fc = nn.Linear(hidden_dim, output_dim)
         
     def forward(self, text_tokens):
@@ -32,7 +32,9 @@ class LSTMClassifier(nn.Module):
         # Run through dropout to randomly deactivate neurons (Prevents Memorization)
         dropped_memory = self.dropout(final_memory)
         
-        # Compress the final memory down to a single prediction value (0 to 1)
+        # Compress final memory to 2 class scores (NEG, POS)
+        # Use argmax(dim=1) to get prediction, softmax for probabilities
+        # CrossEntropyLoss handles softmax internally during training
         predictions = self.fc(dropped_memory)
         
         return predictions

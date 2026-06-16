@@ -12,7 +12,7 @@ print(f"Using device: {device}")
 class ReviewDataset(Dataset):
     def __init__(self, reviews, labels):
         self.reviews = torch.tensor(reviews, dtype=torch.long)
-        self.labels = torch.tensor(labels, dtype=torch.float32)
+        self.labels = torch.tensor(labels, dtype=torch.long)
     
     def __len__(self):
         return len(self.reviews)
@@ -54,7 +54,7 @@ def train_and_evaluate(lr, hidden_dim, dropout_rate, epochs=1):
         dropout_rate=dropout_rate
     ).to(device)
     
-    local_criterion = nn.BCEWithLogitsLoss()
+    local_criterion = nn.CrossEntropyLoss()
     local_optimizer = torch.optim.Adam(local_model.parameters(), lr=lr)
     
     for epoch in range(epochs):
@@ -65,7 +65,8 @@ def train_and_evaluate(lr, hidden_dim, dropout_rate, epochs=1):
             batch_labels = batch_labels.to(device)
             
             local_optimizer.zero_grad()
-            predictions = local_model(batch_reviews).squeeze(1)
+            predictions = local_model(batch_reviews)              # shape: (batch, 2)
+            batch_labels = batch_labels.long()
             loss = local_criterion(predictions, batch_labels)
             loss.backward()
             local_optimizer.step()
@@ -77,7 +78,8 @@ def train_and_evaluate(lr, hidden_dim, dropout_rate, epochs=1):
             for batch_reviews, batch_labels in val_loader:
                 batch_reviews = batch_reviews.to(device)
                 batch_labels = batch_labels.to(device)
-                predictions = local_model(batch_reviews).squeeze(1)
+                predictions = local_model(batch_reviews)              # shape: (batch, 2)
+                batch_labels = batch_labels.long()
                 loss = local_criterion(predictions, batch_labels)
                 running_val_loss += loss.item() * batch_reviews.size(0)
                 
@@ -127,8 +129,8 @@ print("Saved top-tier model weights to 'best_lstm_model.pth'")
 def predict_sentiment(text, model, word_idx_map, max_len=512):
     """
     Uses the same tokenize_and_encode pipeline as training.
-    Previously used a different cleaning function — inputs must be
-    preprocessed identically at inference and training time.
+    Model now outputs 2 logits (NEG, POS) — use softmax + argmax,
+    not sigmoid which only works for single-scalar binary output.
     """
     from dataset_helpers.data_tokenize import tokenize_and_encode
     model.eval()
@@ -137,13 +139,13 @@ def predict_sentiment(text, model, word_idx_map, max_len=512):
     input_tensor = torch.tensor([tokens], dtype=torch.long).to(device)
 
     with torch.no_grad():
-        raw_prediction = model(input_tensor)
-        probability = torch.sigmoid(raw_prediction).item()
+        logits      = model(input_tensor)              # shape: (1, 2)
+        probs       = torch.softmax(logits, dim=1)[0]  # shape: (2,)
+        pred        = probs.argmax().item()            # 0=NEG, 1=POS
+        confidence  = probs[pred].item() * 100
 
-    if probability >= 0.5:
-        return "Positive", probability * 100
-    else:
-        return "Negative", (1 - probability) * 100
+    label = "Positive" if pred == 1 else "Negative"
+    return label, confidence
 
 custom_reviews = [
     "This film was an absolute masterpiece with incredible writing.",

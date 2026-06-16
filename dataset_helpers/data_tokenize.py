@@ -5,9 +5,9 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent))
 from dataset_explore import(clean_and_tokenize,encode,load_vocab,get_mock_data,get_real_data,PAD_TOKEN,UNK_TOKEN,)
 
-MAX_LEN     = 512
+MAX_LEN = 512
 RANDOM_SEED = 42
-VAL_RATIO   = 0.1  #10% of training set = 2500 reviews
+VAL_RATIO = 0.1  #10% of training set = 2500 reviews
 
 def pad_or_truncate(indices,MAX_LEN,pad_index=0):
     if len(indices)<=MAX_LEN:

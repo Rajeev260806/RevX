@@ -7,6 +7,6 @@
   "num_classes": 2,
   "pad_idx": 0,
   "max_len": 512,
-  "val_accuracy": 0.8756,
-  "val_f1": 0.8777034998033818
+  "val_accuracy": 0.884,
+  "val_f1": 0.8871595330739299
 }

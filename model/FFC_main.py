@@ -4,7 +4,7 @@ from pathlib import Path
 import sys
 import json
  
-sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
  
 from dataset_helpers.dataset_explore import load_vocab, PAD_TOKEN, UNK_TOKEN
 from dataset_helpers.data_tokenize import get_splits, MAX_LEN, tokenize_and_encode

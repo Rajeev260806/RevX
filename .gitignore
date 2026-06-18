@@ -1,9 +1,5 @@
 .venv/
 venv/
 All_Beauty.jsonl
-dataset_helpers/__pycache__
 __pycache__
-best_imroved_model.pth
-final_model.pth
-best_lstm_model.pth
-*.pth
+node_modules

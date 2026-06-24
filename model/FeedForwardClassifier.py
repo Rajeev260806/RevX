@@ -12,7 +12,7 @@ LEARNING_RATE = 1e-3
 NUM_EPOCHS = 10
 BATCH_SIZE = 32
 PATIENCE = 3
-MODEL_PATH = Path(__file__).parent / "best_model_FeedForward.pth"
+MODEL_PATH = Path(__file__).parent / "best_model.pth"
 
 class SentimentClassifier(nn.Module):
     

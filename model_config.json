@@ -3,10 +3,10 @@
   "vocab_size": 30569,
   "embed_dim": 128,
   "hidden_dim": 64,
-  "dropout_p": 0.3,
+  "dropout_p": 0.5,
   "num_classes": 2,
   "pad_idx": 0,
   "max_len": 512,
   "val_accuracy": 0.884,
-  "val_f1": 0.8871595330739299
+  "val_f1": 0.8867187500000001
 }

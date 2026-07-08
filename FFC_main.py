@@ -4,7 +4,7 @@ from pathlib import Path
 import sys
 import json
  
-sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent))
  
 from dataset_helpers.dataset_explore import load_vocab, PAD_TOKEN, UNK_TOKEN
 from dataset_helpers.data_tokenize import get_splits, MAX_LEN, tokenize_and_encode
@@ -320,24 +320,11 @@ if __name__ == "__main__":
     print(f"\n  Architecture: {final_model}")
     print(f"  Parameters  : {sum(p.numel() for p in final_model.parameters()):,}")
  
-    # Patch MODEL_PATH in FeedForwardClassifier so train() saves the improved
-    # model's best checkpoint to a separate file — not over the Week 3 baseline.
-    import model.FeedForwardClassifier as ffc_module
-    IMPROVED_MODEL_PATH = Path(__file__).parent / "best_improved_model.pth"
-    _original_model_path  = ffc_module.MODEL_PATH       # save original
-    ffc_module.MODEL_PATH = IMPROVED_MODEL_PATH         # redirect saves here
-
     train(final_model, train_loader, val_loader,
           num_epochs=NUM_EPOCHS, lr=best_config["lr"],
           patience=PATIENCE, device=device)
-
-    ffc_module.MODEL_PATH = _original_model_path        # restore original
-
-    # Load the best checkpoint train() saved (not last-epoch weights)
-    final_model.load_state_dict(
-        torch.load(IMPROVED_MODEL_PATH, map_location=device)
-    )
-    print(f"\n  Best improved checkpoint saved to : {IMPROVED_MODEL_PATH}")
+    IMPROVED_MODEL_PATH = Path(__file__).parent / "best_improved_model.pth"
+    torch.save(final_model.state_dict(), IMPROVED_MODEL_PATH)
     
     print("\n" + "=" * 60)
     print("STEP 5 — BASELINE vs IMPROVED COMPARISON")

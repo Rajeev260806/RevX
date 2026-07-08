@@ -1,14 +1,8 @@
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from dataset_helpers.data_tokenize import get_splits
 from model.LSTM import LSTMClassifier
-
-MODEL_DIR = Path(__file__).parent
 
 # 1. Hardware Configuration
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -18,7 +12,7 @@ print(f"Using device: {device}")
 class ReviewDataset(Dataset):
     def __init__(self, reviews, labels):
         self.reviews = torch.tensor(reviews, dtype=torch.long)
-        self.labels = torch.tensor(labels, dtype=torch.long)
+        self.labels = torch.tensor(labels, dtype=torch.float32)
     
     def __len__(self):
         return len(self.reviews)
@@ -30,73 +24,64 @@ class ReviewDataset(Dataset):
 train_x, train_y, val_x, val_y, test_x, test_y = get_splits(mock_data=False)
 
 train_dataset = ReviewDataset(train_x, train_y)
-val_dataset   = ReviewDataset(val_x, val_y)
+val_dataset = ReviewDataset(val_x, val_y)
+
+train_x, train_y = train_x[:500], train_y[:500]
+val_x, val_y = val_x[:100], val_y[:100]
 
 train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
 
-from dataset_helpers.dataset_explore import load_vocab
-word_to_idx, _ = load_vocab()
-VOCAB_SIZE = len(word_to_idx)
+load_vocab_func = get_splits.__globals__['load_vocab']
+word_to_idx, _ = load_vocab_func()
+VOCAB_SIZE = len(word_to_idx)  
 
 # =============================================================
 #         WEEK 4: HYPERPARAMETER TUNING ENGINE
 # =============================================================
 
-def train_and_evaluate(lr, hidden_dim, dropout_rate, epochs=5):
+def train_and_evaluate(lr, hidden_dim, dropout_rate, epochs=1):
     """
-    Trains the LSTM and returns the best checkpoint's val_loss and model.
-    Saves best weights during training, not last-epoch weights.
+    Trains the LSTM with specific hyperparameters and returns the final validation loss.
     """
+    # Initialize model with current tuning dimensions
     local_model = LSTMClassifier(
-        vocab_size=VOCAB_SIZE,
-        embedding_dim=128,
-        hidden_dim=hidden_dim,
+        vocab_size=VOCAB_SIZE, 
+        embedding_dim=128, 
+        hidden_dim=hidden_dim, 
         dropout_rate=dropout_rate
     ).to(device)
-
-    local_criterion = nn.CrossEntropyLoss()
+    
+    local_criterion = nn.BCEWithLogitsLoss()
     local_optimizer = torch.optim.Adam(local_model.parameters(), lr=lr)
-
-    best_val_loss  = float("inf")
-    best_state     = None
-
+    
     for epoch in range(epochs):
-        # Training phase
+        # Training Phase
         local_model.train()
         for batch_reviews, batch_labels in train_loader:
             batch_reviews = batch_reviews.to(device)
-            batch_labels  = batch_labels.to(device).long()
+            batch_labels = batch_labels.to(device)
+            
             local_optimizer.zero_grad()
-            loss = local_criterion(local_model(batch_reviews), batch_labels)
+            predictions = local_model(batch_reviews).squeeze(1)
+            loss = local_criterion(predictions, batch_labels)
             loss.backward()
             local_optimizer.step()
-
-        # Validation phase
+            
+        # Validation Phase
         local_model.eval()
         running_val_loss = 0.0
-        correct = 0
         with torch.no_grad():
             for batch_reviews, batch_labels in val_loader:
                 batch_reviews = batch_reviews.to(device)
-                batch_labels  = batch_labels.to(device).long()
-                preds         = local_model(batch_reviews)
-                running_val_loss += local_criterion(preds, batch_labels).item() * batch_reviews.size(0)
-                correct += (preds.argmax(dim=1) == batch_labels).sum().item()
-
+                batch_labels = batch_labels.to(device)
+                predictions = local_model(batch_reviews).squeeze(1)
+                loss = local_criterion(predictions, batch_labels)
+                running_val_loss += loss.item() * batch_reviews.size(0)
+                
         epoch_val_loss = running_val_loss / len(val_dataset)
-        val_acc        = correct / len(val_dataset)
-
-        # Save best checkpoint — not last-epoch weights
-        if epoch_val_loss < best_val_loss:
-            best_val_loss = epoch_val_loss
-            best_state    = {k: v.clone() for k, v in local_model.state_dict().items()}
-
-        print(f"  Epoch {epoch+1}/{epochs} — val_loss={epoch_val_loss:.4f}  val_acc={val_acc:.2%}")
-
-    # Load best checkpoint before returning
-    local_model.load_state_dict(best_state)
-    return best_val_loss, local_model
+        
+    return epoch_val_loss, local_model
 
 # Define the tuning search space matrix
 learning_rates = [0.001, 0.0005]
@@ -114,7 +99,7 @@ for lr in learning_rates:
         for dropout in dropout_rates:
             print(f"Testing Config: LR={lr} | Hidden Size={hidden_dim} | Dropout={dropout}")
             
-            val_loss, trained_model = train_and_evaluate(lr, hidden_dim, dropout, epochs=5)
+            val_loss, trained_model = train_and_evaluate(lr, hidden_dim, dropout, epochs=2)
             print(f"--> Resulting Validation Loss: {val_loss:.4f}\n")
             
             # Save the configurations if they outperform previous trials
@@ -126,47 +111,41 @@ for lr in learning_rates:
                     'hidden_dim': hidden_dim,
                     'dropout_rate': dropout
                 }
-import json
-lstm_config = {
-    "vocab_size"   : VOCAB_SIZE,
-    "embedding_dim": 128,
-    "hidden_dim"   : best_hyperparameters["hidden_dim"],
-    "output_dim"   : 2,
-    "dropout_rate" : best_hyperparameters["dropout_rate"],
-}
-with open(MODEL_DIR / "lstm_config.json", "w") as f:
-    json.dump(lstm_config, f, indent=2)
 
 print("TUNING COMPLETE: BEST EXPERIMENTAL CONFIGURATION")
 print(f"Optimal Parameters: {best_hyperparameters}")
 print(f"Top Validation Loss Achieved: {best_val_loss:.4f}\n")
 
 # Save the absolute optimal weights to disk as requested by the Wk 4 rubric
-torch.save(best_model.state_dict(), MODEL_DIR / "best_lstm_model.pth")
+torch.save(best_model.state_dict(), "best_lstm_model.pth")
 print("Saved top-tier model weights to 'best_lstm_model.pth'")
 
 # INFERENCE PIPELINE FOR CUSTOM REVIEWS
 
 def predict_sentiment(text, model, word_idx_map, max_len=512):
-    """
-    Uses the same tokenize_and_encode pipeline as training.
-    Model now outputs 2 logits (NEG, POS) — use softmax + argmax,
-    not sigmoid which only works for single-scalar binary output.
-    """
-    from dataset_helpers.data_tokenize import tokenize_and_encode
     model.eval()
-
-    tokens = tokenize_and_encode(text, word_idx_map, max_len)
+    clean_text = text.lower()
+    for char in [".", ",", "!", "?", '"', "'", "(", ")", "-", ";", ":"]:
+        clean_text = clean_text.replace(char, "")
+        
+    words = clean_text.split()
+    tokens = [word_idx_map.get(word, 0) for word in words]
+    
+    if len(tokens) < max_len:
+        tokens = tokens + [0] * (max_len - len(tokens))
+    else:
+        tokens = tokens[:max_len]
+        
     input_tensor = torch.tensor([tokens], dtype=torch.long).to(device)
-
+    
     with torch.no_grad():
-        logits      = model(input_tensor)              # shape: (1, 2)
-        probs       = torch.softmax(logits, dim=1)[0]  # shape: (2,)
-        pred        = probs.argmax().item()            # 0=NEG, 1=POS
-        confidence  = probs[pred].item() * 100
-
-    label = "Positive" if pred == 1 else "Negative"
-    return label, confidence
+        raw_prediction = model(input_tensor)
+        probability = torch.sigmoid(raw_prediction).item()
+        
+    if probability >= 0.5:
+        return "Positive", probability * 100
+    else:
+        return "Negative", (1 - probability) * 100
 
 custom_reviews = [
     "This film was an absolute masterpiece with incredible writing.",

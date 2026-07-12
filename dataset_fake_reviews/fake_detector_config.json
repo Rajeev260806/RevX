@@ -1,0 +1,10 @@
+{
+  "architecture": "FakeReviewDetector",
+  "vocab_size": 30569,
+  "embed_dim": 128,
+  "hidden_dim": 64,
+  "dropout_p": 0.3,
+  "pad_idx": 0,
+  "best_threshold": 0.5,
+  "num_extra_features": 6
+}

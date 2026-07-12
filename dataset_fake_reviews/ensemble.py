@@ -501,26 +501,3 @@ if __name__ == "__main__":
     print("  Example pipeline output:")
     for k, v in sample_output.items():
         print(f"    {k:20}: {v}")
-
-    # ── Final summary ─────────────────────────────────────────
-    print("\n" + "=" * 60)
-    print("WEEK 8 PIPELINE DESIGN COMPLETE")
-    print("=" * 60)
-    print("""
-  Concepts implemented:
-  ✅ Statistical anomaly detection: z-scores on 6 features
-  ✅ ML anomaly detection: binary classifier fake probability
-  ✅ Ensembling: F1-weighted combination of both signals
-  ✅ Combined pipeline: fake detection → sentiment, both stored
-
-  What you send to Rajeev:
-     get_detection_score(text) → float 0.0-1.0
-     This replaces mock_partner_score in his ensemble.
-
-  Before Week 9 — fix in your code:
-  ❌ Replace hash() tokenization with 
-          () pipeline
-  ❌ Remove strict=False — let architecture mismatches crash loudly
-  ❌ Add nn.LSTM layer to LSTMClassifier — currently it is FFC
-  ❌ Confirm best_lstm_model.pth loads cleanly into fixed class
-    """)

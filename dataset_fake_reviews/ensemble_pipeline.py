@@ -42,7 +42,7 @@ class ProductionDatabase:
 # 2. OPERATIONAL PIPELINE PIPING
 # ─────────────────────────────────────────────────────────────
 class OperationalReviewPipeline:
-    def __init__(self, fake_model_path, word_to_idx, device, threshold=0.60, w_ml=0.10, w_stat=0.90):
+    def __init__(self, fake_model_path, word_to_idx, device, threshold=0.50, w_ml=0.10, w_stat=0.90):
         self.device = device
         self.word_to_idx = word_to_idx
         self.threshold = threshold  # Tuned threshold floor evaluated from validation tuning
@@ -81,7 +81,6 @@ class OperationalReviewPipeline:
         
         # 3. Calculate blended probability using your ensemble.py calculation rules
         final_score = ensemble_fake_score(ml_score, stat_score, self.w_ml, self.w_stat)
-        
         # Core Week 9 Interception Filtering Rule
         action = "REJECTED" if final_score > self.threshold else "APPROVED"
         
@@ -108,13 +107,17 @@ if __name__ == "__main__":
         word_to_idx, _ = load_vocab()
     except:
         word_to_idx = {"<PAD>": 0, "best": 1, "amazing": 2} # Resilient fallback context
-        
-    # Initialize the operational checkpoint system
+
+    w_ml   = 0.60
+    w_stat = 0.40
+
     pipeline = OperationalReviewPipeline(
         fake_model_path=MODEL_PATH,
         word_to_idx=word_to_idx,
         device=device,
-        threshold=0.60  # Aligned with verified validation optimal targets
+        threshold=0.50,
+        w_ml = w_ml,
+        w_stat= w_stat  # Aligned with verified validation optimal targets
     )
     
     # Validation suite containing a variety of reviews (Targeted bots, humans, complaints)

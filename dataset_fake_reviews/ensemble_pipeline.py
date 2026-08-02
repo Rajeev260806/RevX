@@ -143,7 +143,7 @@ if __name__ == "__main__":
         print(f"   Ensemble Score: {evaluation_result['ensemble_combined_score']:.4f} : Action: {evaluation_result['action']}")
         print(f"   Data Storage Route: {db_feedback}")
 
-    print("\n" + "=" * 75)
+    print("\n" + "=" * 75)  
     print("OPERATIONAL INFRASTRUCTURE TELEMETRY METRICS")
     print("=" * 75)
     print(f" Total Live Product Table Rows Written: {len(db.live_reviews)}")

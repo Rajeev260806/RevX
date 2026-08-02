@@ -3,3 +3,4 @@ venv/
 All_Beauty.jsonl
 node_modules
 __pycache__
+.env
